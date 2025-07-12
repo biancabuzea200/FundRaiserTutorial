@@ -1,0 +1,12 @@
+# Compiler files
+cache/
+out/
+# Library Files
+lib/
+broadcast/
+
+# Docs
+docs/
+
+# Dotenv file
+.env
