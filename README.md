@@ -1,5 +1,5 @@
 ## Create a 'FundRaiser' Contract
-In this workshop, we will create our FundRaiser contract that will help us collect funds denominated in USD up to a goal amount. 
+In this workshop, we will create our FundRaiser contract that will help us collect funds in ETH up to a goal amount denominated in ETH. 
 
 # How to Run it?
 ```
