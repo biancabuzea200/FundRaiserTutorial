@@ -2,10 +2,6 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.2;
 
-interface TokenInterface {
-    function mint(address account, uint256 amount) external;
-}
-
 interface IChronicle {
     function read() external view returns (uint256 value);
 }
