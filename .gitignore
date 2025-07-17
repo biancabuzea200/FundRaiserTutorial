@@ -2,7 +2,6 @@
 cache/
 out/
 # Library Files
-lib/
 broadcast/
 
 # Docs
