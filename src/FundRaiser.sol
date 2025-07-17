@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.2;
 
 interface IChronicle {
-    function read() external view returns (uint256 value);
+    function read() external view returns (uint value);
 }
 
 // https://github.com/chronicleprotocol/self-kisser/blob/main/src/ISelfKisser.sol
@@ -13,12 +12,11 @@ interface ISelfKisser {
 }
 
 contract FundRaiser {
-    IChronicle public chronicle; // the price feed we will use
+    IChronicle public chronicle; // The price feed we will use.
     ISelfKisser public selfKisser;
     address public owner;
 
-    uint256 public amount_raised;
-    uint256 private constant RAISE_GOAL = 100;
+    uint private constant RAISE_GOAL_USD = 4000 ether; // 4000 USD in wei (18 decimal places).
 
     constructor() {
         /**
@@ -38,37 +36,53 @@ contract FundRaiser {
         owner = msg.sender;
     }
 
-    function _read() internal view returns (uint256 val) {
-        val = chronicle.read();
-    }
-
-    function weiAmountToUSD(uint256 amountWei) public view returns (uint256) {
-        // Send amountETH, how many USD I have
-        uint256 ethUsd = _read(); // Price feed has 10**18 decimal places
-        uint256 amountUSD = (amountWei * ethUsd) / 10 ** 18; // Price is 10**18
-        return amountUSD;
-    }
-
     receive() external payable {
-        // only accept payment if we have not reached the goal yet
-        require(amount_raised < RAISE_GOAL, "raise goal already reached!");
-        // calculate the donations value in USD
-        uint256 amountUSD = weiAmountToUSD(msg.value);
-        // add it to our total raised
-        amount_raised += amountUSD;
+        // Convert amount raised in ETH to USD.
+        uint amountRaisedUSD_ = _weiToUSD(address(this).balance);
+        // Require that the amount raised in USD is less than the goal.
+        require(amountRaisedUSD_ < RAISE_GOAL_USD, "raise goal already reached!");
     }
+
+    // -- Modifier --
 
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
 
+    // -- Functions --
+
     function withdraw() external onlyOwner {
         (bool success,) = owner.call{value: address(this).balance}("");
         require(success, "Transfer failed.");
     }
 
-    function amountRaised() public view returns (uint256) {
-        return (amount_raised) / (10 ** 18);
-    } 
+    // -- State --
+
+    /// @notice Returns the amount raised in USD with 18 decimal places.
+    function amountRaisedUSD() public view returns (uint) {
+        uint amountRaised = address(this).balance; // Amount raised in ETH
+        return _weiToUSD(amountRaised); // Convert to USD.
+    }
+
+    /// @notice Returns the amount raised in USD with 18 decimal places.
+    function raiseGoal() public pure returns (uint) {
+        return RAISE_GOAL_USD;
+    }
+
+    // -- Helpers --
+
+    /// @dev Converts wei amount to USD using the price feed.
+    /// @dev The USD amount has 18 decimal places.
+    function _weiToUSD(uint amountEth) internal view returns (uint) {
+        // Read the price feed to get the ETH/USD price.
+        uint ethUsd = _read(); // Price feed has 10**18 decimal places  (eth / usd) * 10^18 
+        uint amountUSD = (amountEth * ethUsd) / 10**18; // Convert ETH to USD
+        return amountUSD; // Return the USD amount with 18 decimal places
+    }
+
+    function _read() internal view returns (uint val) {
+        val = chronicle.read();
+    }
+
 }
